@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package com.netflix.spinnaker.keel.api;
+option java_package = "com.netflix.spinnaker.keel.api";
+
+// Asset describes a "thing" that can be declaratively actuated.
+message Asset {
+  string id = 1;
+  bytes payload = 2;
+  repeated string labels = 3;
+  string version = 5;
+  string fingerprint = 6;
+}
+
+// AbstractAsset describes metadata that can be composed atop an Asset.
+// A Plugin is responsible for the semantics of how an AbstractAsset is
+// applied to an Asset.
+message AbstractAsset {
+  string id = 1;
+  bytes payload = 2;
+  repeated string lables = 3;
+}
+
+// AssetContainer is a grouping of Assets which will be actuated on as
+// a singular unit.
+message AssetContainer {
+  string id = 1;
+  repeated Asset assets = 2;
+}

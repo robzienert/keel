@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package com.netflix.spinnaker.keel.api;
+option java_package = "com.netflix.spinnaker.keel.api";
+
+import "spec.proto";
+
+// PluginService allows new Assets to be acutated on. When a Plugin is
+// registered with Keel, it defines what Assets it is capable of processing
+// and will be called whenever actuation events occur for that particular
+// Asset.
+service PluginService {
+  // Describe is called by Keel to retrieve information about the Plugin
+  // that may have changed since registration, including information about
+  // ownership, supported Assets and so-on.
+  rpc Describe(DescribeRequest) returns (DescribeResponse);
+
+  // Plan is called whenever an end user wants to preview what a particular
+  // Asset change would do if its changes were applied.
+  rpc Plan(PlanRequest) returns (PlanResponse);
+
+  // Apply is called whenever an Asset has changed and passed all preceeding
+  // Check Plugins. This call must be idempotent.
+  rpc Apply(ApplyRequest) returns (ApplyResponse);
+
+  // After an Apply or Plan operation, Keel will poll this endpoint to
+  // inquire about progress. Once a completed status is returned for a
+  // particular operation, Keel will no longer poll.
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
+}
+
+message DescribeRequest{}
+
+message DescribeResponse{
+  // The immutable id of the plugin (Spinnaker must be configured with list of "registered" IDs)
+  // Formatted "[namespace[.]]:$UUID"
+  // Namespaces can be used to
+  string id = 1;
+  string version = 2;
+
+  // Used for filtering on the Spinnaker side (ex "Only run the FooPlugin if the version is "latest-release"
+  // and the "environment" is "test"
+  repeated string labels = 3;
+
+  // The human-facing name of the plugin, can change
+  string name = 2;
+
+  // A list of asset IDs (regex) supported by the plugin
+  repeated string supportedAssets = 3;
+
+  repeated PluginType supportedTypes = 4;
+  string description = 5;
+}
+
+message PlanRequest{
+  string operationId = 1;
+  Asset asset = 2;
+}
+message PlanResponse{
+  string operationId = 1;
+  string payload = 2;
+  repeated string messages = 3;
+}
+
+message ApplyRequest{
+  string operationId = 1;
+}
+message ApplyResponse{
+  string operationId = 1;
+  string payload = 2;
+  repeated string messages = 3;
+}
+
+message GetStatusRequest{
+  string operationId = 1;
+}
+message GetStatusResponse{
+  string operationId = 1;
+  Actuation actuation = 2;
+
+  message Actuation {
+    string id = 1;
+
+    enum ActuationType {
+      PLAN = 0;
+      APPLY = 1;
+    }
+
+    ActuationType type = 2;
+    string payload = 3;
+    repeated string messages = 4;
+    repeated Actuation children = 5;
+
+    message Task {
+      string name = 1;
+      string description = 2;
+
+      enum TaskState {
+        NOT_STARTED = 0;
+        RUNNING = 1;
+        SUCCESS = 2;
+        TERMINAL = 3;
+      }
+
+      TaskState = 3;
+      repeated string messages = 4;
+
+    }
+  }
+}
+
+
+
+

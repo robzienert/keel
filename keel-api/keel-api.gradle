@@ -1,0 +1,9 @@
+apply plugin: 'com.google.protobuf'
+
+sourceSets {
+  main {
+    proto {
+      srcDir "src/main/proto"
+    }
+  }
+}

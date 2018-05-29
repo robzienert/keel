@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package com.netflix.spinnaker.keel.api;
+option java_package = "com.netflix.spinnaker.keel.api";
+
+import "spec.proto";
+
+// CheckPluginService is used to implement control over when an Asset diff
+// should be applied. A Check Plugin must respond in a boolean go/no-go
+// format, but can optionally return human-readable reasons to explain why
+// a decision either way was taken.
+//
+// All registered Check Plugins must respond with a positive success for an
+// Asset to be actuated on.
+service CheckPluginService {
+  // Check will be polled whenever an Asset change needs to be applied.
+  // A CheckRequest may be sent multiple times, depending on the response
+  // of this or other Check Plugins.
+  rpc Check(CheckRequest) returns (CheckResponse);
+}
+
+message CheckRequest {
+  Asset asset = 1;
+
+  enum CheckType {
+    INVALID = 0;
+    APPLY = 1;
+    DELETE = 2;
+  }
+
+  CheckType type = 2;
+}
+
+message CheckResponse {
+  bool success = 1;
+  repeated string messages = 2;
+}

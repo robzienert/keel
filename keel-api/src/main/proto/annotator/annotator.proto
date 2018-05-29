@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package com.netflix.spinnaker.keel.api.annotator;
+option java_package = "com.netflix.spinnaker.keel.api.annotator";
+
+import "spec.proto";
+
+// AnnotatorService is responsible for pre-processing Assets during a save
+// event. An Annotator can either mutate an inbound Asset according to its
+// own rules, or even abort the save operation from completing, thereby
+// blocking the Asset change.
+service AnnotatorService {
+  rpc Annotate(AnnotateRequest) returns (AnnotateResponse);
+}
+
+message AnnotateRequest {
+  Asset asset = 1;
+}
+
+message AnnotateResponse {
+  Asset asset = 1;
+
+  enum ResultType {
+    SUCCESS = 0;
+    FAILED = 1;
+
+    // Used by annotators to signal the Asset shouldn't even be converged
+    // or continue the annotator chain
+    TERMINAL = 2;
+  }
+
+  ResultType type = 2;
+  repeated string messages = 3;
+}
